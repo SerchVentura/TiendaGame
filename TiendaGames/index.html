@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CYBERSTORE - Tienda Gamer</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- BARRA DE NAVEGACIÓN -->
+  <header>
+    <div class="logo">CYBER<span>STORE</span></div>
+    <nav class="nav-links">
+      <a href="pages/login.html" class="btn-admin">⚙ PANEL ADMIN</a>
+    </nav>
+  </header>
+
+  <!-- BANNER HERO -->
+  <section class="hero">
+    <h2>EQUIPAMIENTO DE ÉLITE</h2>
+    <p>UPGRADEÁ TU SETUP CON TECNOLOGÍA DE ÚLTIMA GENERACIÓN</p>
+  </section>
+
+  <!-- BARRA DE BÚSQUEDA Y FILTROS -->
+  <div class="controles-tienda">
+    <div>
+      <button class="btn-filtro active" onclick="filtrarCategoria('todos', this)">TODOS</button>
+      <button class="btn-filtro" onclick="filtrarCategoria('hardware', this)">HARDWARE</button>
+      <button class="btn-filtro" onclick="filtrarCategoria('perifericos', this)">PERIFÉRICOS</button>
+      <button class="btn-filtro" onclick="filtrarCategoria('consolas', this)">CONSOLAS</button>
+    </div>
+    <input type="text" id="buscador" class="input-search" placeholder="Buscar componente..." onkeyup="buscarProductos()">
+  </div>
+
+  <!-- GRILLA PRINCIPAL DE ARTÍCULOS -->
+  <main class="contenedor">
+    <div id="grid-articulos" class="grid-gamer"></div>
+  </main>
+
+  <!-- BOTÓN FLOTANTE DE CARRITO -->
+  <div class="cart-float" onclick="abrirCarrito()">
+    🛒 <span id="contador-carrito">0</span> ITEMS
+  </div>
+
+  <!-- MODAL / DRAWER LATERAL DEL CARRITO -->
+  <div class="cart-overlay" id="cartOverlay" onclick="cerrarCarrito()"></div>
+  <aside class="cart-sidebar" id="cartSidebar">
+    <div class="cart-header">
+      <h3>TU SETUP (CARRITO)</h3>
+      <button class="btn-close-cart" onclick="cerrarCarrito()">✕</button>
+    </div>
+
+    <div class="cart-items-list" id="cartItemsContainer">
+      <!-- Se insertan dinámicamente -->
+    </div>
+
+    <div class="cart-footer">
+      <div class="cart-total-row">
+        <span>TOTAL:</span>
+        <span style="color: var(--neon-cyan);" id="cartTotalMonto">$0.00</span>
+      </div>
+      <button class="btn-buy" style="width: 100%; margin-bottom: 0.6rem;" onclick="finalizarCompra()">COMPRAR AHORA</button>
+      <button class="btn-filtro" style="width: 100%; color: var(--neon-pink); border-color: var(--neon-pink);" onclick="vaciarCarrito()">VACIAR CARRITO</button>
+    </div>
+  </aside>
+
+  <script>
+    var catalogoInicial = [
+      {
+        nombre: "GeForce RTX 4070 Ti",
+        categoria: "hardware",
+        precio: 799.99,
+        descripcion: "12GB GDDR6X, Ray Tracing Ultra, DLSS 3. Rendimiento 4K fluido.",
+        foto: "https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=400"
+      },
+      {
+        nombre: "Teclado Mecánico RGB",
+        categoria: "perifericos",
+        precio: 129.50,
+        descripcion: "Switches mecánicos ópticos, switches lineales y chasis de aluminio.",
+        foto: "https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=400"
+      },
+      {
+        nombre: "Mouse Inalámbrico Ultra",
+        categoria: "perifericos",
+        precio: 79.99,
+        descripcion: "Sensor óptico 26K DPI, peso pluma de 60g, latencia 1ms.",
+        foto: "https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?w=400"
+      },
+      {
+        nombre: "Audífonos Surround 7.1",
+        categoria: "perifericos",
+        precio: 95.00,
+        descripcion: "Drivers de titanio 50mm, micrófono con cancelación de ruido.",
+        foto: "https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=400"
+      },
+      {
+        nombre: "PlayStation 5 Slim",
+        categoria: "consolas",
+        precio: 499.99,
+        descripcion: "Almacenamiento SSD 1TB de alta velocidad y gatillos hápticos.",
+        foto: "https://images.unsplash.com/photo-1606813907291-d86efa9b94db?w=400"
+      },
+      {
+        nombre: "Monitor Curvo 240Hz",
+        categoria: "hardware",
+        precio: 349.00,
+        descripcion: "Panel VA de 27 pulgadas, 1ms respuesta, compatibilidad G-Sync.",
+        foto: "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=400"
+      }
+    ];
+
+    function cargarProductos() {
+      var datos = localStorage.getItem("productos_gamer");
+      if (!datos) {
+        localStorage.setItem("productos_gamer", JSON.stringify(catalogoInicial));
+        return catalogoInicial;
+      }
+      return JSON.parse(datos);
+    }
+
+    var categoriaActual = "todos";
+    var carrito = []; // Guarda objetos: { nombre, precio, foto, cantidad }
+
+    function renderizar(lista) {
+      var grid = document.getElementById("grid-articulos");
+      grid.innerHTML = "";
+
+      if (!lista || lista.length === 0) {
+        grid.innerHTML = "<p style='grid-column: 1/-1; text-align: center; color: var(--text-muted); font-size: 1.2rem; padding: 3rem;'>No hay artículos disponibles.</p>";
+        return;
+      }
+
+      for (var i = 0; i < lista.length; i++) {
+        var p = lista[i];
+        grid.innerHTML += `
+          <article class="card-gamer">
+            <span class="badge-tag">${(p.categoria || 'GENERAL').toUpperCase()}</span>
+            <img src="${p.foto}" alt="${p.nombre}" onerror="this.src='https://placehold.co/400x300/111420/00f2fe?text=Gamer'">
+            <div class="card-info">
+              <h3>${p.nombre}</h3>
+              <p>${p.descripcion || ''}</p>
+              <div class="card-footer">
+                <span class="precio-glow">$${parseFloat(p.precio).toFixed(2)}</span>
+                <button class="btn-buy" onclick="agregarAlCarrito('${p.nombre}')">+ AGREGAR</button>
+              </div>
+            </div>
+          </article>
+        `;
+      }
+    }
+
+    function refrescarVista() {
+      var productos = cargarProductos();
+      var inputBuscador = document.getElementById("buscador");
+      var query = inputBuscador ? inputBuscador.value.toLowerCase() : "";
+
+      var filtrados = productos.filter(function(item) {
+        var coincideNombre = item.nombre.toLowerCase().includes(query);
+        var coincideCat = (categoriaActual === "todos" || item.categoria === categoriaActual);
+        return coincideNombre && coincideCat;
+      });
+
+      renderizar(filtrados);
+    }
+
+    function buscarProductos() { refrescarVista(); }
+
+    function filtrarCategoria(cat, elementoBtn) {
+      categoriaActual = cat;
+      var botones = document.querySelectorAll(".btn-filtro");
+      botones.forEach(b => b.classList.remove("active"));
+      elementoBtn.classList.add("active");
+      refrescarVista();
+    }
+
+    // --- LÓGICA DEL CARRITO (AÑADIR, MODIFICAR, ELIMINAR) ---
+
+    function agregarAlCarrito(nombre) {
+      var productos = cargarProductos();
+      var itemEncontrado = productos.find(p => p.nombre === nombre);
+      if (!itemEncontrado) return;
+
+      var enCarrito = carrito.find(c => c.nombre === nombre);
+      if (enCarrito) {
+        enCarrito.cantidad++;
+      } else {
+        carrito.push({
+          nombre: itemEncontrado.nombre,
+          precio: parseFloat(itemEncontrado.precio),
+          foto: itemEncontrado.foto,
+          cantidad: 1
+        });
+      }
+      actualizarCarritoUI();
+    }
+
+    function cambiarCantidad(nombre, cambio) {
+      var item = carrito.find(c => c.nombre === nombre);
+      if (!item) return;
+
+      item.cantidad += cambio;
+      if (item.cantidad <= 0) {
+        quitarDelCarrito(nombre);
+      } else {
+        actualizarCarritoUI();
+      }
+    }
+
+    function quitarDelCarrito(nombre) {
+      carrito = carrito.filter(c => c.nombre !== nombre);
+      actualizarCarritoUI();
+    }
+
+    function vaciarCarrito() {
+      if (carrito.length === 0) return;
+      if (confirm("¿Vaciar todos los componentes del carrito?")) {
+        carrito = [];
+        actualizarCarritoUI();
+      }
+    }
+
+    function actualizarCarritoUI() {
+      var contenedor = document.getElementById("cartItemsContainer");
+      var contador = document.getElementById("contador-carrito");
+      var totalElem = document.getElementById("cartTotalMonto");
+
+      var totalItems = 0;
+      var montoTotal = 0;
+
+      if (carrito.length === 0) {
+        contenedor.innerHTML = "<p style='text-align:center; color:var(--text-muted); padding:2rem;'>El carrito está vacío.</p>";
+      } else {
+        contenedor.innerHTML = carrito.map(function(item) {
+          totalItems += item.cantidad;
+          montoTotal += (item.precio * item.cantidad);
+          return `
+            <div class="cart-item">
+              <img src="${item.foto}" alt="${item.nombre}" onerror="this.src='https://placehold.co/50x50/111420/00f2fe?text=Gamer'">
+              <div class="cart-item-details">
+                <h4>${item.nombre}</h4>
+                <div class="price">$${item.precio.toFixed(2)}</div>
+              </div>
+              <div class="cart-item-controls">
+                <button class="btn-qty" onclick="cambiarCantidad('${item.nombre}', -1)">-</button>
+                <span style="font-weight:bold; min-width:18px; text-align:center;">${item.cantidad}</span>
+                <button class="btn-qty" onclick="cambiarCantidad('${item.nombre}', 1)">+</button>
+                <button class="btn-item-delete" onclick="quitarDelCarrito('${item.nombre}')" title="Eliminar del carrito">🗑</button>
+              </div>
+            </div>
+          `;
+        }).join("");
+      }
+
+      contador.innerText = totalItems;
+      totalElem.innerText = "$" + montoTotal.toFixed(2);
+    }
+
+    function abrirCarrito() {
+      document.getElementById("cartOverlay").classList.add("active");
+      document.getElementById("cartSidebar").classList.add("active");
+    }
+
+    function cerrarCarrito() {
+      document.getElementById("cartOverlay").classList.remove("active");
+      document.getElementById("cartSidebar").classList.remove("active");
+    }
+
+    function finalizarCompra() {
+      if (carrito.length === 0) {
+        alert("Tu carrito está vacío.");
+        return;
+      }
+      alert("¡Compra procesada con éxito! Gracias por tu orden en CYBERSTORE.");
+      carrito = [];
+      actualizarCarritoUI();
+      cerrarCarrito();
+    }
+
+    // Sincronización en vivo
+    window.addEventListener("storage", function(event) {
+      if (event.key === "productos_gamer") refrescarVista();
+    });
+
+    window.addEventListener("focus", function() { refrescarVista(); });
+
+    // Carga inicial
+    refrescarVista();
+    actualizarCarritoUI();
+  </script>
+</body>
+</html>

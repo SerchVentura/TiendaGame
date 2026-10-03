@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CYBERSTORE - Acceso Administrativo</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .login-wrapper {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Resplandor decorativo de fondo */
+    .glow-orb {
+      position: absolute;
+      width: 320px;
+      height: 320px;
+      border-radius: 50%;
+      filter: blur(85px);
+      z-index: 0;
+      opacity: 0.45;
+      pointer-events: none;
+    }
+    .orb-cyan { background: var(--neon-cyan); top: 15%; left: 20%; }
+    .orb-pink { background: var(--neon-pink); bottom: 15%; right: 20%; }
+
+    /* Caja de login con borde cian neón */
+    .login-box {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 420px;
+      background: rgba(15, 18, 28, 0.85);
+      border: 1px solid rgba(0, 242, 254, 0.4);
+      border-radius: 16px;
+      padding: 2.5rem 2rem;
+      backdrop-filter: blur(14px);
+      box-shadow: 0 0 25px rgba(0, 242, 254, 0.15), 0 20px 40px rgba(0, 0, 0, 0.6);
+      transition: transform 0.2s ease, border-color 0.3s ease;
+    }
+
+    .login-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .badge-hud {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--neon-cyan);
+      border: 1px solid var(--neon-cyan);
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      margin-bottom: 0.8rem;
+      text-transform: uppercase;
+      box-shadow: 0 0 8px rgba(0, 242, 254, 0.3);
+    }
+
+    .login-header h2 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.7rem;
+      color: #fff;
+      letter-spacing: 1px;
+    }
+
+    .login-header p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-top: 0.3rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.3rem;
+    }
+
+    .form-group label {
+      display: block;
+      color: var(--neon-cyan);
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 0.4rem;
+    }
+
+    .input-icon-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .input-icon-wrapper input {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      padding: 0.8rem 1rem;
+      color: #fff;
+      font-size: 1rem;
+      font-family: 'Rajdhani', sans-serif;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+
+    .input-icon-wrapper input:focus {
+      border-color: var(--neon-cyan);
+      box-shadow: 0 0 12px rgba(0, 242, 254, 0.35);
+      background: rgba(255, 255, 255, 0.07);
+    }
+
+    /* Botón del ojo para revelar contraseña */
+    .btn-toggle-pass {
+      position: absolute;
+      right: 12px;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+      transition: color 0.2s ease, transform 0.2s ease;
+    }
+
+    .btn-toggle-pass:hover {
+      color: var(--neon-cyan);
+      transform: scale(1.1);
+    }
+
+    .btn-toggle-pass svg {
+      width: 20px;
+      height: 20px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .btn-login-submit {
+      width: 100%;
+      background: linear-gradient(135deg, var(--neon-purple), var(--neon-pink));
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0.85rem;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      cursor: pointer;
+      text-transform: uppercase;
+      box-shadow: 0 0 15px rgba(255, 0, 127, 0.4);
+      margin-top: 0.8rem;
+      transition: all 0.3s ease;
+    }
+
+    .btn-login-submit:hover {
+      box-shadow: 0 0 25px rgba(255, 0, 127, 0.7);
+      transform: translateY(-2px);
+    }
+
+    /* Mensaje de alerta HUD */
+    .alert-hud {
+      display: none;
+      background: rgba(255, 0, 127, 0.15);
+      border: 1px solid var(--neon-pink);
+      color: #ffb3d9;
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 0.6rem 0.8rem;
+      border-radius: 6px;
+      text-align: center;
+      margin-bottom: 1.2rem;
+      letter-spacing: 0.5px;
+    }
+
+    .login-footer {
+      text-align: center;
+      margin-top: 1.8rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 1rem;
+    }
+
+    .login-footer a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: color 0.2s ease;
+    }
+
+    .login-footer a:hover {
+      color: var(--neon-cyan);
+    }
+
+    /* Animación de error al fallar credenciales */
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-8px); }
+      40%, 80% { transform: translateX(8px); }
+    }
+
+    .shake-error {
+      animation: shake 0.4s ease-in-out;
+      border-color: var(--neon-pink) !important;
+      box-shadow: 0 0 25px rgba(255, 0, 127, 0.35) !important;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-wrapper">
+    <div class="glow-orb orb-cyan"></div>
+    <div class="glow-orb orb-pink"></div>
+
+    <div class="login-box" id="loginCard">
+      <div class="login-header">
+        <span class="badge-hud">Nivel de Acceso: Root</span>
+        <h2>ADMIN LOGIN</h2>
+        <p>Introduce tus credenciales para gestionar el sistema</p>
+      </div>
+
+      <div id="alertaError" class="alert-hud">
+        ⚠ ACCESO DENEGADO: Credenciales inválidas
+      </div>
+
+      <form onsubmit="return validarLogin(event)">
+        <div class="form-group">
+          <label>Usuario Operador</label>
+          <div class="input-icon-wrapper">
+            <input type="text" id="usuario" placeholder="Ej. admin" autocomplete="off" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Código de Seguridad</label>
+          <div class="input-icon-wrapper">
+            <input type="password" id="password" placeholder="••••••••" required>
+            <button type="button" class="btn-toggle-pass" onclick="alternarVisibilidadPass()" title="Ver u ocultar contraseña">
+              <!-- Ícono de ojo (abierto) -->
+              <svg id="iconoOjo" viewBox="0 0 24 24">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-login-submit">AUTORIZAR INGRESO</button>
+      </form>
+
+      <div class="login-footer">
+        <a href="../index.html">← Volver al Catálogo Público</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Alternar visibilidad de contraseña y cambiar forma del SVG
+    function alternarVisibilidadPass() {
+      var passInput = document.getElementById("password");
+      var iconoOjo = document.getElementById("iconoOjo");
+
+      if (passInput.type === "password") {
+        passInput.type = "text";
+        // SVG con diagonal tachada (ojo cerrado)
+        iconoOjo.innerHTML = `
+          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+          <line x1="1" y1="1" x2="23" y2="23"></line>
+        `;
+      } else {
+        passInput.type = "password";
+        // SVG original (ojo abierto)
+        iconoOjo.innerHTML = `
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+          <circle cx="12" cy="12" r="3"></circle>
+        `;
+      }
+    }
+
+    // Validación y animación reactiva
+    function validarLogin(e) {
+      e.preventDefault();
+
+      var user = document.getElementById("usuario").value.trim();
+      var pass = document.getElementById("password").value.trim();
+      var card = document.getElementById("loginCard");
+      var alertBox = document.getElementById("alertaError");
+
+      if (user === "admin" && pass === "1234") {
+        alertBox.style.display = "none";
+        // Redirección inmediata a admin.html
+        window.location.href = "admin.html";
+      } else {
+        // Disparar animación de sacudida y alerta de error
+        alertBox.style.display = "block";
+        card.classList.remove("shake-error");
+        void card.offsetWidth; // Reinicia el ciclo de animación en el DOM
+        card.classList.add("shake-error");
+      }
+    }
+  </script>
+</body>
+</html>

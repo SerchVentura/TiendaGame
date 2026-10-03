@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CYBERSTORE - Panel de Inventario</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .admin-header {
+      background: rgba(10, 11, 16, 0.95);
+      border-bottom: 1px solid var(--neon-cyan);
+      box-shadow: 0 0 15px rgba(0, 242, 254, 0.15);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .admin-stats {
+      max-width: 1250px;
+      margin: 2rem auto 0 auto;
+      padding: 0 1.5rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      padding: 1.2rem;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--neon-cyan);
+      box-shadow: 0 0 10px var(--neon-cyan);
+    }
+
+    .stat-card.pink::before {
+      background: var(--neon-pink);
+      box-shadow: 0 0 10px var(--neon-pink);
+    }
+
+    .stat-card.purple::before {
+      background: var(--neon-purple);
+      box-shadow: 0 0 10px var(--neon-purple);
+    }
+
+    .stat-label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 700;
+    }
+
+    .stat-value {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.8rem;
+      color: #fff;
+      margin-top: 0.4rem;
+    }
+
+    .dashboard-layout {
+      max-width: 1250px;
+      margin: 2rem auto 4rem auto;
+      padding: 0 1.5rem;
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 2rem;
+    }
+
+    @media (max-width: 900px) {
+      .dashboard-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel-box {
+      background: var(--bg-card);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 1.5rem;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .panel-box h2 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.25rem;
+      color: #fff;
+      margin-bottom: 1.2rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .form-gamer label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--neon-cyan);
+      margin-bottom: 0.3rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-gamer input, .form-gamer select, .form-gamer textarea {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 6px;
+      padding: 0.7rem 0.9rem;
+      color: #fff;
+      font-size: 0.95rem;
+      margin-bottom: 1rem;
+      transition: all 0.3s;
+    }
+
+    .form-gamer input:focus, .form-gamer select:focus, .form-gamer textarea:focus {
+      outline: none;
+      border-color: var(--neon-cyan);
+      box-shadow: 0 0 10px rgba(0, 242, 254, 0.3);
+    }
+
+    .form-gamer textarea {
+      resize: vertical;
+      min-height: 70px;
+    }
+
+    .table-container {
+      overflow-x: auto;
+    }
+
+    .table-gamer {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    .table-gamer th {
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--neon-cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.8rem;
+      letter-spacing: 1px;
+      padding: 0.9rem;
+      border-bottom: 1px solid rgba(0, 242, 254, 0.2);
+    }
+
+    .table-gamer td {
+      padding: 0.9rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      vertical-align: middle;
+      color: var(--text-main);
+      font-size: 0.95rem;
+    }
+
+    .table-gamer tr:hover {
+      background: rgba(0, 242, 254, 0.03);
+    }
+
+    .item-thumb {
+      width: 50px;
+      height: 50px;
+      border-radius: 6px;
+      object-fit: cover;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: #111420;
+    }
+
+    .tag-cat {
+      background: rgba(121, 40, 202, 0.2);
+      border: 1px solid var(--neon-purple);
+      color: #d8b4fe;
+      font-size: 0.75rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .acciones-btn {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .btn-edit-action {
+      background: transparent;
+      color: var(--neon-cyan);
+      border: 1px solid var(--neon-cyan);
+      padding: 0.4rem 0.6rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-edit-action:hover {
+      background: var(--neon-cyan);
+      color: #000;
+      box-shadow: 0 0 10px var(--neon-cyan);
+    }
+
+    .btn-del-action {
+      background: transparent;
+      color: var(--neon-pink);
+      border: 1px solid var(--neon-pink);
+      padding: 0.4rem 0.6rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-del-action:hover {
+      background: var(--neon-pink);
+      color: #fff;
+      box-shadow: 0 0 10px var(--neon-pink);
+    }
+
+    .btn-cancelar {
+      background: transparent;
+      border: 1px solid #64748b;
+      color: #94a3b8;
+      width: 100%;
+      padding: 0.6rem;
+      border-radius: 6px;
+      margin-top: 0.5rem;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .btn-cancelar:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR SUPERIOR -->
+  <header class="admin-header">
+    <div class="logo">CYBER<span>ADMIN</span> // CONTROL SYSTEM</div>
+    <div style="display: flex; gap: 1rem; align-items: center;">
+      <a href="../index.html" class="btn-admin" style="font-size: 0.85rem;">← IR A LA TIENDA</a>
+      <a href="login.html" class="btn-filtro" style="color: var(--neon-pink); border-color: var(--neon-pink);">SALIR</a>
+    </div>
+  </header>
+
+  <!-- TARJETAS DE MÉTRICAS RÁPIDAS -->
+  <section class="admin-stats">
+    <div class="stat-card">
+      <div class="stat-label">Artículos Registrados</div>
+      <div class="stat-value" id="stat-total">0</div>
+    </div>
+    <div class="stat-card pink">
+      <div class="stat-label">Valor en Inventario</div>
+      <div class="stat-value" id="stat-valor">$0.00</div>
+    </div>
+    <div class="stat-card purple">
+      <div class="stat-label">Unidades en Stock</div>
+      <div class="stat-value" id="stat-unidades">0</div>
+    </div>
+  </section>
+
+  <!-- LAYOUT PRINCIPAL -->
+  <main class="dashboard-layout">
+    
+    <!-- FORMULARIO CRUD (CREAR Y EDITAR) -->
+    <section class="panel-box">
+      <h2 id="titulo-form"><span>⚡</span> Nuevo Componente</h2>
+      <form id="form-nuevo-prod" class="form-gamer" onsubmit="return procesarFormulario(event)">
+        <!-- Campo oculto para guardar el índice cuando se esté editando -->
+        <input type="hidden" id="edit-index" value="-1">
+
+        <label>Nombre del Producto:</label>
+        <input type="text" id="p-nombre" placeholder="Ej. Teclado Mecánico RGB" required>
+
+        <label>Categoría:</label>
+        <select id="p-categoria" style="background:#131722; color:#fff;">
+          <option value="hardware">Hardware</option>
+          <option value="perifericos">Periféricos</option>
+          <option value="consolas">Consolas</option>
+        </select>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem;">
+          <div>
+            <label>Precio ($):</label>
+            <input type="number" step="0.01" id="p-precio" placeholder="0.00" required>
+          </div>
+          <div>
+            <label>Stock:</label>
+            <input type="number" id="p-stock" placeholder="0" required>
+          </div>
+        </div>
+
+        <label>URL de Imagen:</label>
+        <input type="text" id="p-foto" placeholder="https://... o ../images/foto.jpg" required>
+
+        <label>Descripción Breve:</label>
+        <textarea id="p-desc" placeholder="Detalles clave del componente..."></textarea>
+
+        <button type="submit" id="btn-submit" class="btn-buy" style="width: 100%; padding: 0.8rem; margin-top: 0.5rem;">+ AGREGAR AL SISTEMA</button>
+        <button type="button" id="btn-cancel" class="btn-cancelar" style="display: none;" onclick="cancelarEdicion()">CANCELAR EDICIÓN</button>
+      </form>
+    </section>
+
+    <!-- TABLA DE CONTROL DEL INVENTARIO -->
+    <section class="panel-box">
+      <h2><span>📊</span> Inventario Activo</h2>
+      <div class="table-container">
+        <table class="table-gamer">
+          <thead>
+            <tr>
+              <th>ÍTEM</th>
+              <th>NOMBRE</th>
+              <th>CATEGORÍA</th>
+              <th>PRECIO</th>
+              <th>STOCK</th>
+              <th>GESTIÓN</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-items"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // Inventario predeterminado por si localStorage está vacío la primera vez
+    var catalogoInicial = [
+      {
+        nombre: "GeForce RTX 4070 Ti",
+        categoria: "hardware",
+        precio: 799.99,
+        stock: 4,
+        descripcion: "12GB GDDR6X, Ray Tracing Ultra, DLSS 3.",
+        foto: "https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=400"
+      },
+      {
+        nombre: "Teclado Mecánico RGB",
+        categoria: "perifericos",
+        precio: 129.50,
+        stock: 12,
+        descripcion: "Switches mecánicos ópticos y chasis de aluminio.",
+        foto: "https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=400"
+      },
+      {
+        nombre: "Mouse Inalámbrico Ultra",
+        categoria: "perifericos",
+        precio: 79.99,
+        stock: 18,
+        descripcion: "Sensor óptico 26K DPI, peso pluma de 60g.",
+        foto: "https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?w=400"
+      },
+      {
+        nombre: "PlayStation 5 Slim",
+        categoria: "consolas",
+        precio: 499.99,
+        stock: 6,
+        descripcion: "Almacenamiento SSD 1TB y gatillos hápticos.",
+        foto: "https://images.unsplash.com/photo-1606813907291-d86efa9b94db?w=400"
+      }
+    ];
+
+    // Cargar productos desde localStorage o inicializar con los datos por defecto
+    function obtenerInventario() {
+      var guardados = localStorage.getItem("productos_gamer");
+      if (!guardados) {
+        localStorage.setItem("productos_gamer", JSON.stringify(catalogoInicial));
+        return catalogoInicial;
+      }
+      return JSON.parse(guardados);
+    }
+
+    // Guardar cambios en el almacenamiento común del navegador
+    function guardarInventario(lista) {
+      localStorage.setItem("productos_gamer", JSON.stringify(lista));
+    }
+
+    function actualizarMetricas() {
+      var inventario = obtenerInventario();
+      var totalArticulos = inventario.length;
+      var totalUnidades = 0;
+      var valorTotal = 0;
+
+      for (var i = 0; i < inventario.length; i++) {
+        var item = inventario[i];
+        totalUnidades += item.stock;
+        valorTotal += (item.precio * item.stock);
+      }
+
+      document.getElementById("stat-total").innerText = totalArticulos;
+      document.getElementById("stat-unidades").innerText = totalUnidades;
+      document.getElementById("stat-valor").innerText = "$" + valorTotal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    // RENDERIZAR TABLA (READ)
+    function renderizarTabla() {
+      var inventario = obtenerInventario();
+      var tbody = document.getElementById("tabla-items");
+      tbody.innerHTML = "";
+
+      if (inventario.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">No hay productos en inventario.</td></tr>`;
+        actualizarMetricas();
+        return;
+      }
+
+      for (var i = 0; i < inventario.length; i++) {
+        var p = inventario[i];
+        tbody.innerHTML += `
+          <tr>
+            <td>
+              <img src="${p.foto}" class="item-thumb" alt="${p.nombre}" onerror="this.src='https://placehold.co/50x50/111420/00f2fe?text=Gamer'">
+            </td>
+            <td><strong>${p.nombre}</strong></td>
+            <td><span class="tag-cat">${p.categoria}</span></td>
+            <td style="color: var(--neon-cyan); font-weight: 700;">$${parseFloat(p.precio).toFixed(2)}</td>
+            <td><span style="color: ${p.stock < 5 ? 'var(--neon-pink)' : '#fff'}; font-weight: 700;">${p.stock} u.</span></td>
+            <td>
+              <div class="acciones-btn">
+                <button class="btn-edit-action" onclick="cargarParaEditar(${i})">EDITAR</button>
+                <button class="btn-del-action" onclick="eliminarItem(${i})">BORRAR</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }
+
+      actualizarMetricas();
+    }
+
+    // CREAR Y ACTUALIZAR (CREATE & UPDATE)
+    function procesarFormulario(e) {
+      e.preventDefault();
+
+      var inventario = obtenerInventario();
+      var index = parseInt(document.getElementById("edit-index").value);
+
+      var datosProducto = {
+        nombre: document.getElementById("p-nombre").value,
+        categoria: document.getElementById("p-categoria").value,
+        precio: parseFloat(document.getElementById("p-precio").value),
+        stock: parseInt(document.getElementById("p-stock").value),
+        foto: document.getElementById("p-foto").value,
+        descripcion: document.getElementById("p-desc").value
+      };
+
+      if (index === -1) {
+        inventario.unshift(datosProducto);
+      } else {
+        inventario[index] = datosProducto;
+      }
+
+      guardarInventario(inventario);
+      cancelarEdicion();
+      renderizarTabla();
+    }
+
+    // CARGAR DATOS AL FORMULARIO
+    function cargarParaEditar(indice) {
+      var inventario = obtenerInventario();
+      var item = inventario[indice];
+
+      document.getElementById("edit-index").value = indice;
+      document.getElementById("p-nombre").value = item.nombre;
+      document.getElementById("p-categoria").value = item.categoria;
+      document.getElementById("p-precio").value = item.precio;
+      document.getElementById("p-stock").value = item.stock;
+      document.getElementById("p-foto").value = item.foto;
+      document.getElementById("p-desc").value = item.descripcion || "";
+
+      document.getElementById("titulo-form").innerHTML = `<span>🛠</span> Editando: ${item.nombre}`;
+      var btnSubmit = document.getElementById("btn-submit");
+      btnSubmit.innerText = "✓ ACTUALIZAR COMPONENTE";
+      btnSubmit.style.background = "linear-gradient(135deg, #00f2fe, #2563eb)";
+      document.getElementById("btn-cancel").style.display = "block";
+
+      document.getElementById("form-nuevo-prod").scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function cancelarEdicion() {
+      document.getElementById("edit-index").value = "-1";
+      document.getElementById("form-nuevo-prod").reset();
+
+      document.getElementById("titulo-form").innerHTML = "<span>⚡</span> Nuevo Componente";
+      var btnSubmit = document.getElementById("btn-submit");
+      btnSubmit.innerText = "+ AGREGAR AL SISTEMA";
+      btnSubmit.style.background = "linear-gradient(135deg, var(--neon-purple), var(--neon-pink))";
+      document.getElementById("btn-cancel").style.display = "none";
+    }
+
+    // ELIMINAR (DELETE)
+    function eliminarItem(indice) {
+      if (confirm("¿Confirmar eliminación de este componente del sistema?")) {
+        var inventario = obtenerInventario();
+        inventario.splice(indice, 1);
+        guardarInventario(inventario);
+        cancelarEdicion();
+        renderizarTabla();
+      }
+    }
+
+    // Iniciar
+    renderizarTabla();
+  </script>
+</body>
+</html>
